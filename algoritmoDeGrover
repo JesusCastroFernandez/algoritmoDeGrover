@@ -1,0 +1,54 @@
+-- Definir la función que devuelve el número de qubits necesarios para representar n elementos
+function qubitsNeeded(n: Int): Int {
+    return ceil(log(n) / log(2))
+}
+
+-- Definir la función que crea una superposición uniforme de todos los estados posibles
+function createSuperposition(qubits: Qubit[]): Unit {
+    Hadamard(qubits)
+}
+
+-- Definir la función que aplica la reflexión sobre la media
+function applyDiffusion(qubits: Qubit[]): Unit {
+    -- Calcular el promedio de la amplitud
+    let avg = 1.0 / length(qubits) * Sum(qubits)
+    -- Aplicar la reflexión sobre la media
+    for qubit in qubits {
+        X(qubit)
+    }
+    ControlledPhaseFlip(qubits, -2 * avg + 1)
+    for qubit in qubits {
+        X(qubit)
+    }
+}
+
+-- Definir el algoritmo de Grover para buscar en una lista desordenada
+function groverSearch(list: Int[], target: Int): Int {
+    let n = length(list)
+    let qubits = Qubit[qubitsNeeded(n)]
+    createSuperposition(qubits)
+    let numIterations = ceil(sqrt(n))
+    for i in 1..numIterations {
+        let indexQubits = Qubit[qubitsNeeded(n)]
+        createSuperposition(indexQubits)
+        for j in 0..n-1 {
+            if (list[j] == target) {
+                ControlledOnInt(qubits, j, X, indexQubits)
+            }
+        }
+        applyDiffusion(indexQubits)
+    }
+    let result = 0
+    for i in 0..n-1 {
+        if (list[i] == target) {
+            result = i
+            break
+        }
+    }
+    return result
+}
+
+-- Ejecutar el algoritmo de Grover para buscar el número 7 en una lista de 10 números del 1 al 10
+let list = [2, 6, 4, 8, 1, 9, 3, 5, 10, 7]
+let result = groverSearch(list, 7)
+print("El resultado es " + result)
